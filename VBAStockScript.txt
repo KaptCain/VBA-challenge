@@ -1,0 +1,139 @@
+Sub stockChange()
+    Dim ws As Worksheet
+    Dim lastR As Long
+    Dim ticker As String
+    Dim currentTick As String
+    Dim i As Long
+    Dim openP As Double
+    Dim closeP As Double
+    Dim outputR As Long
+    Dim startR As Long
+    Dim percentChange As Double
+    Dim compoundV As Double
+    Dim maxInc As Double
+    Dim maxDec As Double
+    Dim maxV As Double
+    Dim tempV As Double
+    Dim maxVTick As String
+    Dim maxIncTick As String
+    Dim maxDecTick As String
+    
+    
+       
+    
+    For Each ws In ThisWorkbook.Worksheets
+        lastR = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+        
+        
+        currentTick = ws.Cells(2, 1).Value
+        startR = 2
+        outputR = 2
+        compoundV = 0
+        maxInc = -1E+308
+        maxDec = 1E+308
+        maxV = 0
+        maxVTick = ""
+        maxIncTick = ""
+        maxDecTick = ""
+        
+        
+        For i = 2 To lastR
+            ticker = ws.Cells(i, 1).Value
+            
+            If ticker <> currentTick Or i = lastR Then
+                
+                openP = ws.Cells(startR, 3).Value
+                If i = lastR Then
+                    closeP = ws.Cells(i, 6).Value
+                Else
+                    closeP = ws.Cells(i - 1, 6).Value
+                End If
+                
+                ws.Cells(outputR, 9).Value = currentTick
+                ws.Cells(outputR, 10).Value = closeP - openP
+                If openP <> 0 Then
+                    percentChange = ((closeP - openP) / openP) * 100 / 100
+                Else
+                    percentChange = 0
+                End If
+                If i = lastR And ticker = currentTick Then
+                    compoundV = compoundV + ws.Cells(i, 7).Value
+                End If
+                ws.Cells(outputR, 11).Value = percentChange
+                ws.Cells(outputR, 12).Value = compoundV
+                
+                If percentChange > maxInc Then
+                    maxInc = percentChange
+                    maxIncTick = currentTick
+                End If
+                If percentChange < maxDec Then
+                    maxDec = percentChange
+                    maxDecTick = currentTick
+                    
+                End If
+                
+                tempV = compoundV
+                If tempV > maxV Then
+                    maxV = tempV
+                    maxVTick = currentTick
+                End If
+                
+                
+                outputR = outputR + 1
+                
+                
+                currentTick = ticker
+                startR = i
+                compoundV = ws.Cells(i, 7).Value
+            Else
+                compoundV = compoundV + ws.Cells(i, 7).Value
+            End If
+        Next i
+        If lastR > 1 And ws.Cells(lastR, 1).Value = currentTick Then
+            ws.Cells(outputR - 1, 12).Value = compoundV
+        End If
+        
+        ws.Cells(2, 15).Value = "Greatest % Increase"
+        ws.Cells(2, 17).Value = maxInc
+        ws.Cells(2, 16).Value = maxIncTick
+        
+        ws.Cells(3, 15).Value = "Greatest % Decrease"
+        ws.Cells(3, 17).Value = maxDec
+        ws.Cells(3, 16).Value = maxDecTick
+        
+        ws.Cells(4, 15).Value = "Highest Volume"
+        ws.Cells(4, 17).Value = maxV
+        ws.Cells(4, 16).Value = maxVTick
+        ws.Range("I1").Value = "Ticker"
+        ws.Range("p1").Value = "Ticker"
+        ws.Range("J1").Value = "Quarterly Change"
+        ws.Range("K1").Value = "Percent Change"
+        ws.Range("L1").Value = "Total Stock Volume"
+        ws.Range("Q1").Value = "Value"
+        
+        ws.Range("J2:J" & outputR).FormatConditions.Delete
+        With ws.Range("J2:J" & outputR).FormatConditions.Add(xlCellValue, xlGreater, 0)
+            .Interior.ColorIndex = 4
+        End With
+        With ws.Range("J2:J" & outputR).FormatConditions.Add(xlCellValue, xlLess, 0)
+            .Interior.ColorIndex = 3
+        End With
+        ws.Range("K2:K" & outputR).FormatConditions.Delete
+        With ws.Range("K2:K" & outputR).FormatConditions.Add(xlCellValue, xlGreater, 0)
+            .Interior.ColorIndex = 4
+        End With
+        With ws.Range("K2:K" & outputR).FormatConditions.Add(xlCellValue, xlLess, 0)
+            .Interior.ColorIndex = 3
+        End With
+        ws.Range("Q2:Q3").NumberFormat = "0.00%"
+        ws.Range("K2:K" & outputR).NumberFormat = "0.00%"
+        ws.Columns.AutoFit
+    Next ws
+    
+End Sub
+
+
+
+
+
+
